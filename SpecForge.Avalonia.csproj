@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\SpecForge.ico</ApplicationIcon>
+
+    <RootNamespace>SpecForge.Avalonia</RootNamespace>
+    <AssemblyName>SpecForge.Avalonia</AssemblyName>
+
+    <!--
+      В WPF-версии привязки рефлексионные, и разметка работает без x:DataType.
+      Здесь то же самое: включать скомпилированные привязки нужно только вместе
+      с аннотациями x:DataType во всех файлах разметки.
+    -->
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.4" />
+    <!-- Внимание: пакет называется FluentAvaloniaUI. Пакет "FluentAvalonia"
+         на NuGet другой и не связан с этим проектом. -->
+    <PackageReference Include="FluentAvaloniaUI" Version="3.1.0" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <!--
+    Бизнес-логика - реестр, INF, профиль, планировщик - лежит в папке Core
+    этого же проекта и подхватывается обычным glob, отдельного ItemGroup
+    для неё не требуется.
+
+    Раньше файлы подключались ссылкой из ../SpecForge/Core, пока рядом
+    существовала WPF-версия. Core не зависит ни от WPF, ни от Avalonia,
+    поэтому переносится без правок.
+
+    GlobalUsings.cs из WPF-версии сюда не попал: он объявляет System,
+    System.IO и System.Linq вручную из-за особенности сборки WPF,
+    а здесь ImplicitUsings уже включён.
+  -->
+
+</Project>

@@ -1,0 +1,26 @@
+## Сборка
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+*.user
+*.suo
+*.userprefs
+
+## Visual Studio
+.vs/
+*.sln.docstates
+*.VC.db
+
+## Rider / ReSharper
+.idea/
+*.DotSettings.user
+
+## Прочее
+Thumbs.db
+Desktop.ini
+*.log
+
+## Актуальный .NET SDK и настройки проекта
+*.csproj.user

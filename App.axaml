@@ -1,0 +1,20 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sty="using:FluentAvalonia.Styling"
+             x:Class="SpecForge.Avalonia.App"
+             RequestedThemeVariant="Dark">
+
+    <Application.Styles>
+        <!--
+            FluentAvaloniaTheme полностью заменяет штатную тему Avalonia,
+            поэтому FluentTheme здесь дублировать не нужно.
+
+            PreferSystemTheme=False вместе с RequestedThemeVariant="Dark"
+            в App даёт всегда тёмную тему - как в Neverlose, на который
+            ориентировался предыдущий вариант интерфейса.
+            PreferUserAccentColor=True берёт акцентный цвет из Windows.
+        -->
+        <sty:FluentAvaloniaTheme PreferSystemTheme="False" PreferUserAccentColor="True" />
+    </Application.Styles>
+
+</Application>

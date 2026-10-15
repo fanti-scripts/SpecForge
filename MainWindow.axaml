@@ -1,0 +1,219 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
+        xmlns:local="using:SpecForge.Avalonia.UI"
+        x:Class="SpecForge.Avalonia.MainWindow"
+        Title="SpecForge"
+        Width="1160" Height="720" MinWidth="900" MinHeight="540"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource NavViewContentBackground}">
+
+    <Window.Resources>
+        <local:ChangedBorderConverter x:Key="ChangedBorder" />
+        <local:CardWidthConverter x:Key="CardWidth" />
+    </Window.Resources>
+
+    <!--
+        Стили у Avalonia лежат в Styles, а не в ResourceDictionary.
+        Цвета берутся через DynamicResource, чтобы подхватывать тему.
+    -->
+    <Window.Styles>
+        <Style Selector="TextBlock.pageTitle">
+            <Setter Property="FontSize" Value="28" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+        </Style>
+
+        <Style Selector="TextBlock.pageSubtitle">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="MaxWidth" Value="760" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+        </Style>
+
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="14,12" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+        </Style>
+
+        <Style Selector="TextBlock.cardTitle">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <!-- Что сейчас в реестре. Приглушено и обрезано: это справочная
+             строка, а не то, что пользователь редактирует. -->
+        <Style Selector="TextBlock.cardCurrent">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Opacity" Value="0.65" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+    </Window.Styles>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ================= навигация и содержимое =================
+             Окно с обычной системной рамкой: в Avalonia 12 свойства
+             ExtendClientAreaChromeHints больше нет, и самодельная полоса
+             заголовка дублировалась с подписью системы. Тёмный вид
+             заголовка обеспечивает RequestedThemeVariant="Dark". -->
+        <ui:FANavigationView x:Name="Nav"
+                             Grid.Row="0"
+                             PaneDisplayMode="Left"
+                             IsPaneOpen="True"
+                             IsSettingsVisible="False"
+                             PaneTitle="КОМПОНЕНТЫ"
+                             SelectionChanged="OnNavSelectionChanged">
+
+            <!-- Переключатели внизу панели навигации.
+                 В WPF-версии оба были привязаны к AutoStartEnabled -
+                 это была ошибка; здесь второй переключатель действительно
+                 переключает AutoRevertEnabled. -->
+            <ui:FANavigationView.PaneFooter>
+                <StackPanel Margin="8,0,8,12" Spacing="10">
+                    <ToggleSwitch Content="Автозапуск"
+                                  IsChecked="{Binding AutoStartEnabled, Mode=TwoWay}" />
+                    <ToggleSwitch Content="Откат при входе"
+                                  IsChecked="{Binding AutoRevertEnabled, Mode=TwoWay}" />
+                </StackPanel>
+            </ui:FANavigationView.PaneFooter>
+
+            <Grid Margin="24,18,24,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Margin="0,0,0,14">
+                    <TextBlock Classes="pageTitle" Text="{Binding SelectedGroup}" />
+                    <TextBlock Classes="pageSubtitle" Margin="0,6,0,0"
+                               Text="{Binding GroupSubtitle}" />
+                </StackPanel>
+
+                <!-- Шаблоны. Выбор модели сразу заполняет поля группы:
+                     у видеокарты - все четыре ключа с названием и объём
+                     памяти, у платы - отдельно производитель и модель. -->
+                <Border Grid.Row="1" Classes="card" Margin="0,0,0,14"
+                        Padding="14,12" CornerRadius="4"
+                        IsVisible="{Binding HasTemplates}">
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10">
+                        <TextBlock Grid.Column="0" VerticalAlignment="Center"
+                                   FontWeight="SemiBold" Text="Шаблон" />
+
+                        <ComboBox Grid.Column="1" MinWidth="240"
+                                  HorizontalAlignment="Stretch"
+                                  ItemsSource="{Binding Templates}"
+                                  SelectedItem="{Binding SelectedTemplate, Mode=TwoWay}"
+                                  PlaceholderText="выберите модель" />
+
+                        <TextBlock Grid.Column="2" VerticalAlignment="Center"
+                                   Text="Память"
+                                   IsVisible="{Binding HasMemoryOptions}" />
+
+                        <ComboBox Grid.Column="3" MinWidth="104"
+                                  ItemsSource="{Binding MemoryOptions}"
+                                  SelectedItem="{Binding SelectedMemory, Mode=TwoWay}"
+                                  PlaceholderText="не менять"
+                                  IsVisible="{Binding HasMemoryOptions}" />
+                    </Grid>
+                </Border>
+
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <ItemsControl ItemsSource="{Binding VisibleFields}" Margin="0,0,0,20">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <!--
+                                        Ширина карточки приходит привязкой к ширине
+                                        контейнера. Раньше она считалась самодельной
+                                        панелью прямо во время измерения, из-за чего
+                                        раскладка зацикливалась.
+                                    -->
+                                    <WrapPanel ItemWidth="{Binding $parent[ItemsControl].Bounds.Width,
+                                                        Converter={StaticResource CardWidth}}" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Classes="card" Margin="0,0,12,12"
+                                            BorderBrush="{Binding IsChanged, Converter={StaticResource ChangedBorder}}">
+                                        <StackPanel Spacing="7">
+                                            <TextBlock Classes="cardTitle" Text="{Binding Title}" />
+
+                                            <TextBlock Classes="cardCurrent"
+                                                       Text="{Binding StateLine}"
+                                                       IsVisible="{Binding HasCurrent}" />
+
+                                            <TextBox Text="{Binding Value, Mode=TwoWay}"
+                                                     PlaceholderText="новое значение"
+                                                     ToolTip.Tip="{Binding Danger}" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Дублирующие ключи: те же значения, что и выше,
+                             но в других ветках реестра -->
+                        <Expander Header="Дублирующие ключи"
+                                  IsVisible="{Binding HasSecondary}"
+                                  Margin="0,0,0,20">
+                            <ItemsControl ItemsSource="{Binding SecondaryFields}"
+                                          Margin="0,12,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Classes="card" Margin="0,0,12,12"
+                                                BorderBrush="{Binding IsChanged, Converter={StaticResource ChangedBorder}}">
+                                            <StackPanel Spacing="7">
+                                                <TextBlock Classes="cardTitle" Text="{Binding Title}" />
+                                                <TextBox Text="{Binding Value, Mode=TwoWay}"
+                                                         PlaceholderText="новое значение"
+                                                         ToolTip.Tip="{Binding Danger}" />
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Expander>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </ui:FANavigationView>
+
+        <!-- ================= нижняя панель ================= -->
+        <Border Grid.Row="1" Padding="24,12"
+                Background="{DynamicResource NavViewContentBackground}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" VerticalAlignment="Center" FontSize="13"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="{Binding Status}" />
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                    <Button Content="Обновить" Command="{Binding RefreshCommand}" />
+                    <Button Content="Откатить всё" Command="{Binding RevertCommand}" />
+                    <Button Content="Применить" Command="{Binding ApplyCommand}"
+                            Classes="accent" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
